@@ -2,9 +2,10 @@
 
 Este programa emula el clásico juego de Space Invaders en la plataforma LC-3. Puedes mover la nave a la izquierda o a la derecha usando las teclas 'A' y 'D', y presionar la barra espaciadora para disparar un láser.
 
-Cuando un laser colisiona con un alien, cambia de color, esto significa que se elimino. El juego finaliza cuando se eliminan a todos los aliens.
+Cuando un laser colisiona con un alien, cambia de color, esto significa que se elimino. El juego finaliza cuando se eliminan a todos los aliens. Hay unas estructuras para cubrirse y estas se van destruyendo.
 
-<image src="/Media/game.jpg" alt="Descripción">
+
+<image src="/Media/game.png" alt="Descripción">
 
 
 | Teclas   | Resultado                   |
@@ -18,7 +19,7 @@ Para correrlo:
 
 ```bash
 cd ~/PATH/TO/LC3_Space-invaders/
-java -jar ../LC3sim.jar
+java -jar LC3sim.jar
 ```  
 
 Dentro del simulador:

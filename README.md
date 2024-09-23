@@ -11,14 +11,11 @@ Este programa emula el clásico juego de Space Invaders en la plataforma LC-3. P
 <image src="/Media/game.png" alt="Descripción">
 
 ### Problemas/Progreso
+En versiones anteriores utilizabamos los 8 registros disponibles de manera mas estatica, cargando un valor que iba a estar en el registro durante todo el programa y que si lo perdiamos se rompia el juego. Como la estrategia era un tanto limitada, decidimos cambiar la lógica para implementar una solucion mas dinámica, donde a medida que necesitabamos valores, se reservaban direcciones de memoria para las etiquetas correspondientes. De esta forma, los valores de los registros variaban segun el contexto y no se inicializaban de manera estatica al princpio del programa.
 
-En versiones anteriores del proyecto, utilizábamos los 8 registros disponibles del LC-3 para almacenar valores y coordenadas. Sin embargo, esta estrategia demostró ser limitada, ya que el número de tareas que necesitábamos gestionar sobrepasaba la cantidad de registros. Por esta razón, decidimos implementar una solución más dinámica, guardando valores en memoria y cargándolos en los registros solo cuando eran necesarios. Para lograrlo, aumentamos las direcciones de memoria de forma dinámica en ciertos casos, facilitando la gestión de datos sin agotar los registros.
+Debido al juego, tuvimos que implementar un láser que es controlado de manera independiente a la nave. Una vez disparado, se mueve en dirección vertical hacia arriba, comprobando en cada ciclo si ha alcanzado un alien o si ha salido de la pantalla. 
 
-Dado que trabajamos con una pantalla de **128x128 píxeles**, implementamos una función llamada `CONVERT_TO_XY` para convertir posiciones en coordenadas XY. Esta función utiliza direcciones de memoria específicas para establecer las coordenadas de la pantalla, lo que nos permite mover objetos, como el láser disparado por la nave, por toda la superficie. Al mover el láser, también comparamos continuamente su posición con los límites de la pantalla para detectar si se encuentra fuera de los márgenes, momento en el que el láser se elimina de la pantalla.
-
-### Funcionamiento del láser
-
-El láser es controlado de manera independiente a la nave. Una vez disparado, se mueve en dirección vertical hacia arriba, comprobando en cada ciclo si ha alcanzado un alien o si ha salido de la pantalla. 
+Dado que trabajamos con una pantalla de **128x128 píxeles**, implementamos una función llamada `CONVERT_TO_XY` para convertir posiciones en coordenadas XY. Esta función utiliza direcciones de memoria específicas para establecer las coordenadas de la pantalla, lo que nos permite mover el laser, por toda la superficie. Al mover el láser, también comparamos continuamente su posición con los límites de la pantalla para detectar si se encuentra fuera de los márgenes, momento en el que el láser se elimina de la pantalla.
 
 ### Controles del juego:
 

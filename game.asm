@@ -1,44 +1,54 @@
 .ORIG x3000
 
+
+;;Funcion que da inicio el juego
+;;No tiene input ni output solo se encarga de setear datos y entrar el game loop
 MAIN	JSR	LIMPIAR_PANTALLA
 	JSR	SETUP_DATA
-	JSR	REDIBUJAR_PANTALLA
+	JSR	DIBUJAR_PANTALLA
 	JSR	GAME_LOOP
-	PUTS
 	HALT
+	
 
-;; no tiene input
+;;SETUP DATA se encarga de inicializar algunos datos de los objetos del juego para el comienzo y al final se restauran los valores de los registros
+;; Esta funcion no tiene inputs definidos, sino que se tiene los registros iniciales
+;; Tiene como salida:
+;;-La posicion inicial de alien cargada
+;;-Colores de los aliens
+;;-Distancia entre aliens
+;;-Cantidad de aliens
+;;-Los demas datos de los objetos de la nave y el laser
 SETUP_DATA	ST	R0, SD_R0
 		ST	R0, SD_R1
 		ST	R0, SD_R2
 		ST	R0, SD_R3
 		ST	R0, SD_R4
 		ST	R7, SD_R7
-		LEA	R0, ALIEN0 ; configurar valores de alien		
-		LD	R1, ALIEN_START
-		LD	R2, SD_AZUL
-		LD	R3, ALIEN_OFFSET
-		AND	R4, R4 ,#0
-		ADD	R4, R4 ,#4 ; contador		
-INIT_ALIENS	STR	R2, R0 ,#0 ; setear color
-		ADD	R0, R0 ,#1 ; incrementar puntero
-		STR	R1, R0 ,#0 ; setear posicion
-		ADD	R1, R1, R3 ; incrementar posicion
-		ADD	R0, R0 ,#1 ; incrementar puntero
-		ADD	R4, R4 ,#-1	; decrementar contador
+		LEA	R0, ALIEN0 	;Configurar valores de alien	
+		LD	R1, ALIEN_START ;Posicion inicial del alien
+		LD	R2, SD_AZUL ;Color del alien
+		LD	R3, ALIEN_OFFSET ;Distancia de separacion de los aliens
+		AND	R4, R4 ,#0 
+		ADD	R4, R4 ,#4 	;Contador para la cantidad de aliens
+INIT_ALIENS	STR	R2, R0 ,#0	;Setear color
+		ADD	R0, R0 ,#1 	;Incrementar puntero
+		STR	R1, R0 ,#0 	;Setear posicion
+		ADD	R1, R1, R3 	;Incrementar posicion
+		ADD	R0, R0 ,#1 	;Incrementar puntero
+		ADD	R4, R4 ,#-1	;Decrementar contador
 		BRp	INIT_ALIENS
-		LEA	R0, NAVE
-		LD	R1, NAVE_START
-		LD	R2, SD_ROJO
-		STR	R2, R0 ,#0 ; guardar color de nave
-		ADD	R0, R0 ,#1 ; incrementar puntero	
-		STR	R1, R0 ,#0 ; guardar posicion de nave
-		LEA	R0, LASER
+		LEA	R0, NAVE	;Inicializar la nave
+		LD	R1, NAVE_START 	;Posicion inicial de la nave
+		LD	R2, SD_ROJO	
+		STR	R2, R0 ,#0 	;guardar color de nave
+		ADD	R0, R0 ,#1 	;incrementar puntero	
+		STR	R1, R0 ,#0 	;guardar posicion de nave
+		LEA	R0, LASER	;Inicializar el laser
 		AND	R1, R1 ,#0
-		STR	R1, R0 ,#0 ; setear laser en inactivo			
+		STR	R1, R0 ,#0 	;setear laser en inactivo			
 		ADD	R0, R0 ,#1
 		ADD	R1, R1 ,#1
-		STR	R1, R0 ,#0 ; iniciar laser en posicion 0	
+		STR	R1, R0 ,#0 	;iniciar laser en posicion 0	
 		LD	R0, SD_R0
 		LD	R0, SD_R1
 		LD	R0, SD_R2
@@ -46,62 +56,74 @@ INIT_ALIENS	STR	R2, R0 ,#0 ; setear color
 		LD	R0, SD_R4
 		LD	R7, SD_R7
 		RET
+
+;;Aqui se encuentran los respaldos de los registros		
 SD_R0	.BLKW 1
 SD_R1	.BLKW 1
 SD_R2	.BLKW 1
 SD_R3	.BLKW 1
 SD_R4	.BLKW 1
 SD_R7	.BLKW 1
+;;Datos
 ALIEN_START	.FILL xC18A
 NAVE_START	.FILL xF3B3
 ALIEN_OFFSET	.FILL #30
 SD_AZUL		.FILL x001F
 SD_ROJO		.FILL x7C00
 
-;; dibujar nave 
-;; dibujar/actualizar nave
-    ;; input: R1: direccion de inicio R2: color 
-DIBUJAR_NAVE	ST	R0, DSH_R0
+;; Esta funcion se encarga de dibujar nave 
+;;Input: 
+;;-R1:Direccion de inicio 
+;;-R2:Color 
+;;-Output:
+;;-Como output para la siguiente funcion, se cargan los valores de ancho y largo de la nave
+DIBUJAR_NAVE	ST	R0, DSH_R0	;;Respaldo de registros
 		ST	R3, DSH_R3
 		ST	R4, DSH_R4
 		ST	R7, DSH_R7
-		AND	R4, R4 ,#0 ;; limpiar R4
-		ADD	R4, R2 ,#0	;; setear R4 a R2
-		LD	R2, NAVE_ANCHO
+		AND	R4, R4 ,#0 	;; Limpiar R4
+		ADD	R4, R2 ,#0	;; Setear R4 a R2
+		LD	R2, NAVE_ANCHO 	
 		LD	R3, NAVE_LARGO
-		JSR	DIBUJAR_CUADRADO ;; dibujar nueva posicion de nave (R1 seteado por input)	
-		LD	R0, DSH_R0
+		JSR	DIBUJAR_CUADRADO ;; Dibujar nueva posicion de nave (R1 seteado por input)	
+		LD	R0, DSH_R0	;;Vuelta atras de los registros
 		LD	R3, DSH_R3
 		LD	R4, DSH_R4
 		LD	R7, DSH_R7
 		RET
+
+;;Respaldo de registros		
 DSH_R0		.FILL 1
 DSH_R3		.FILL 1
 DSH_R4		.FILL 1
 DSH_R7		.FILL 1
+;;Datos
 NAVE_ANCHO	.FILL #24
 NAVE_LARGO	.FILL #12
 
-;; no toma input
-;;dibuja/acutaliza los aliens basados en el color en sus arrays
-DIBUJAR_ALIENS	ST	R0, DA_R0
+
+
+;;Dibuja/Actualiza los aliens con los colores y la posicion en sus direcciones de memoria
+;;Input: Esta funcion como tal toma los datos inicializados antes de los aliens
+;;Output: Los aliens dibujadas
+DIBUJAR_ALIENS	ST	R0, DA_R0	;; Respaldo de registros
 		ST	R1, DA_R1
 		ST	R2, DA_R2
 		ST	R3, DA_R3
 		ST	R4, DA_R4
 		ST	R5, DA_R5
 		ST	R7, DA_R7
-		AND	R0, R0 ,#0 ;; limpiar R0	
-		ADD	R0, R0 ,#4 ;; setear R0 para ser contador	
-		LEA	R5, ALIEN0	;; leer posicion del primer alien	
-DIBUJAR_ALIEN	LDR	R4, R5 ,#0 ;; cargar color en R4	
-		ADD 	R5, R5 ,#1	;; incrementar puntero	
-		LDR 	R1, R5 ,#0 ;; cargar direccion de inicio de alien en R1
-		LD	R2, ALIEN_DIM ;; cargar ancho de alien	
-		LD	R3, ALIEN_DIM ; cargar alto de alien	
-		JSR	DIBUJAR_CUADRADO ;; dibujar primer alien	
-		ADD	R5, R5 ,#1	;; incrementar puntero	
-		ADD	R0, R0 ,#-1	;; decrementar contador	
+		AND	R0, R0 ,#0 	;; Limpiar R0	
+		ADD	R0, R0 ,#4 	;; Setear R0 para ser contador	
+		LEA	R5, ALIEN0	;; Leer posicion del primer alien	
+DIBUJAR_ALIEN	LDR	R4, R5 ,#0 	;; Cargar color en R4	
+		ADD 	R5, R5 ,#1	;; Incrementar puntero	
+		LDR 	R1, R5 ,#0 	;; Cargar direccion de inicio de alien en R1
+		LD	R2, ALIEN_DIM 	;; Cargar ancho de alien	
+		LD	R3, ALIEN_DIM 	;; Cargar alto de alien	
+		JSR	DIBUJAR_CUADRADO ;; Dibujar primer alien	
+		ADD	R5, R5 ,#1	;; Incrementar puntero	
+		ADD	R0, R0 ,#-1	;; Decrementar contador	
 		BRp	DIBUJAR_ALIEN
 		LD	R0, DA_R0
 		LD	R1, DA_R1
@@ -112,6 +134,7 @@ DIBUJAR_ALIEN	LDR	R4, R5 ,#0 ;; cargar color en R4
 		LD	R7, DA_R7
 		RET
 
+;;Respaldo de registros
 DA_R0		.BLKW 1
 DA_R1		.BLKW 1
 DA_R2		.BLKW 1
@@ -119,32 +142,37 @@ DA_R3		.BLKW 1
 DA_R4		.BLKW 1
 DA_R5		.BLKW 1
 DA_R7		.BLKW 1
+;;Dimension del alien
 ALIEN_DIM	.FILL #14
 
-;; dibuja/actualiza el laser basado en inputs
-    ;; input: R1: direccion inicio R2: color
-DIBUJAR_LASER	ST	R3, DL_R3
+;;Dibuja/Actualiza el laser basado en inputs
+;;Input: 
+;;-R1: Direccion inicio
+;;-R2: Color
+;;Output: La salida de esta funcion es el laser dibujado
+DIBUJAR_LASER	ST	R3, DL_R3	;;Respaldo de registros
 		ST	R4, DL_R4
 		ST	R7, DL_R7
 		AND	R4, R4 ,#0
-		ADD	R4, R2 ,#0
-		LD	R2, ANCHO_LASER
-		LD	R3, LARGO_LASER
-		JSR	DIBUJAR_CUADRADO ;; dibujar cuadrado laser (R1 es input)	
+		ADD	R4, R2 ,#0	;;Color del laser
+		LD	R2, ANCHO_LASER	;;Dimesiones
+		LD	R3, LARGO_LASER	;;Dimensiones
+		JSR	DIBUJAR_CUADRADO ;;Dibujar laser (R1 es input)	
 		LD	R3, DL_R3
 		LD	R4, DL_R4
 		LD	R7, DL_R7
 		RET
 
+;;Respaldo y datos
 ANCHO_LASER	.FILL #2
 LARGO_LASER	.FILL #12
 DL_R3		.BLKW 1
 DL_R4		.BLKW 1
 DL_R7		.BLKW 1
 
-;; no toma inputs
-;; 
-REDIBUJAR_PANTALLA	ST	R0, SS_R0
+;; Se encarga de dibujar/redibujar la pantalla 
+;; No toma inputs
+DIBUJAR_PANTALLA	ST	R0, SS_R0
 		ST	R1, SS_R1
 		ST	R2, SS_R2
 		ST	R3, SS_R3
@@ -154,10 +182,10 @@ REDIBUJAR_PANTALLA	ST	R0, SS_R0
 		JSR	LIMPIAR_PANTALLA	
 		JSR	DIBUJAR_ALIENS
 		LEA	R5, NAVE
-		LDR	R2, R5 ,#0	;; setea color para dibujar nave
-		ADD	R5, R5 ,#1	;; incrementa puntero nave	
-		LDR R1, R5 ,#0	;;	setear posicion de nave
-		JSR	DIBUJAR_NAVE ;; dibuja nave inicial		
+		LDR	R2, R5 ,#0	;; Setea color para dibujar nave
+		ADD	R5, R5 ,#1	;; Incrementa puntero nave	
+		LDR R1, R5 ,#0		;; Setear posicion de nave
+		JSR	DIBUJAR_NAVE 	;; Dibuja nave inicial		
 		LD	R0, SS_R0
 		LD	R1, SS_R1
 		LD	R2, SS_R2
@@ -167,6 +195,7 @@ REDIBUJAR_PANTALLA	ST	R0, SS_R0
 		LD	R7, SS_R7
 		RET
 		
+;;Respaldo de registros
 SS_R0	.BLKW 1
 SS_R1	.BLKW 1
 SS_R2	.BLKW 1
@@ -175,8 +204,9 @@ SS_R4	.BLKW 1
 SS_R5	.BLKW 1
 SS_R7	.BLKW 1
 
-;; no toma inputs
-;; loop principal del juego
+
+;; Este es el loop principal del juego, donde en cada iteracion se corrobora si la letra tocada del teclado es la necesaria para moverse por la pantalla o para disparar
+;; No toma inputs
 GAME_LOOP	ST	R7, GL_R7
 GAME		JSR	TIMED_INPUT 
    
@@ -185,14 +215,14 @@ SKIP_WHITE	LD	R1, N97
 		BRnp	SKIP_LEFT     
 		AND	R0, R0 ,#0
 		ADD	R1, R1 ,#-4
-		JSR	MOVE_NAVE ;; mover izquierda
+		JSR	MOVER_NAVE ;; mover izquierda
 		
 SKIP_LEFT	LD	R1, N100       
 		ADD	R1, R0, R1    
 		BRnp	SKIP_RIGHT    
 		AND	R0, R0 ,#0
 		ADD	R1, R1 ,#4	
-		JSR	MOVE_NAVE ;; mover derecha
+		JSR	MOVER_NAVE ;; mover derecha
 				
 SKIP_RIGHT	LD	R1, N32        
 		ADD	R1, R0, R1    
@@ -205,7 +235,7 @@ SKIP_QUIT	JSR 	ANIMAR_LASER
 QUIT		LD	R7, GL_R7     
 			RET
 
-			
+;;Guardado las teclas para moverse y disparar, ademas de los colores para la pantalla			
 N97	.FILL #-97	; a
 N100	.FILL #-100	; d
 N32	.FILL #-32	; espacio
@@ -223,36 +253,35 @@ ALIEN3	.BLKW 2
 NAVE	.BLKW 2 
 LASER	.BLKW 2 
 
-;; Mover la nave
-;; cambia la posicion de la nave y redibuja la nave
-;; inputs: R1: offset (-4 o +4)
-MOVE_NAVE	ST	R0, MS_R0
+;; Mover la nave, cambiando la posicion y redibujandola
+;; Inputs: 
+;;-R1: offset (-4 o +4)
+MOVER_NAVE	ST	R0, MS_R0
 		ST	R2, MS_R2
 		ST	R3, MS_R3
 		ST	R4, MS_R4
 		ST	R5, MS_R5
 		ST	R7, MS_R7
 		LEA	R0, NAVE
-		ADD	R0, R0 ,#1	;; incrementa direccion de nave	
-		LDR	R4, R0 ,#0	;; cargar posicion de nave a R4	
-		ADD	R5, R1, R4	;; computa offset a R5	
+		ADD	R0, R0 ,#1	;; Incrementa direccion de nave	
+		LDR	R4, R0 ,#0	;; Cargar posicion de nave a R4	
+		ADD	R5, R1, R4	;; Computa offset a R5	
 		LD	R3, NAVE_MIN
-		ADD	R3, R5, R3	;; checkea si se esta moviendo pasando la pantalla (izquierda)	
+		ADD	R3, R5, R3	;; Checkea si se esta moviendo pasando la pantalla (izquierda)	
 		BRn	NO_MOVE
 		LD	R3, NAVE_MAX
-		ADD	R3, R5, R3	;; checkea si se esta moviendo pasando la pantalla ()	
+		ADD	R3, R5, R3	;; Checkea si se esta moviendo pasando la pantalla ()	
 		BRp	NO_MOVE
-		STR	R5, R0 ,#0	;; guarda nueva posicion	
-		AND	R1, R1 ,#0	;; limpia R1	
-		ADD	R1, R4 ,#0	;; setea R1 a R4	
-		LD	R2, MS_NEGRO ;; setea color a negro	
+		STR	R5, R0 ,#0	;; Guarda nueva posicion	
+		AND	R1, R1 ,#0	;; Limpia R1	
+		ADD	R1, R4 ,#0	;; Setea R1 a R4	
+		LD	R2, MS_NEGRO 	;; Setea color a negro	
 		JSR	DIBUJAR_NAVE
 		AND	R1, R1 ,#0		
 		ADD	R1, R5 ,#0		
-		ADD	R0, R0 ,#-1	;; decrementa puntero de nave	
-		LDR	R2, R0 ,#0 ;; setea color nave	
-		JSR	DIBUJAR_NAVE
-		
+		ADD	R0, R0 ,#-1	;; Decrementa puntero de nave	
+		LDR	R2, R0 ,#0 	;; Setea color nave	
+		JSR	DIBUJAR_NAVE		
 NO_MOVE		LD	R0, MS_R0
 		LD	R2, MS_R2
 		LD	R3, MS_R3
@@ -260,7 +289,8 @@ NO_MOVE		LD	R0, MS_R0
 		LD	R5, MS_R5
 		LD	R7, MS_R7
 		RET
-		
+
+;;Respaldo de registros y datos
 MS_R0	.BLKW 1
 MS_R2	.BLKW 1
 MS_R3	.BLKW 1
@@ -271,8 +301,8 @@ NAVE_MAX	.FILL x0C19
 NAVE_MIN	.FILL x0C7D 
 MS_NEGRO	.FILL x0000
 
-;; no tiene input
-
+;; Esta funcion se encarga del disparo de disparar el laser, hasta que la siguiente tecla no sea espacio y se vuelva al GAME_LOOP
+;; No tiene input
 SHOOT	ST	R0, S_R0
 	ST	R1, S_R1
 	ST	R2, S_R2
@@ -293,8 +323,7 @@ SHOOT	ST	R0, S_R0
 	AND	R1, R1 ,#0
 	ADD	R1, R2 ,#0	
 	STR	R1, R0 ,#1	
-	JSR	DIBUJAR_LASER
-	
+	JSR	DIBUJAR_LASER	
 NOSHOOT	LD	R0, S_R0
 	LD	R1, S_R1
 	LD	R2, S_R2
@@ -310,25 +339,9 @@ S_R3	.BLKW 1
 S_R4	.BLKW 1
 S_R7	.BLKW 1
 NLASER_Y	.FILL xFA00 
-CSH_R0		.BLKW 1
-CSH_R1		.BLKW 1
-CSH_R2		.BLKW 1
-CSH_R3		.BLKW 1
-CSH_R4		.BLKW 1
-CSH_R6		.BLKW 1
-CSH_R7		.BLKW 1
-NALIEN		.FILL #-17	
-NNAVE0_0	.FILL #-9	
-NNAVE0_1	.FILL #-24	
-NNAVE1_0	.FILL #-39	
-NNAVE1_1	.FILL #-54	
-NNAVE2_0	.FILL #-69	
-NNAVE2_1	.FILL #-84	
-NNAVE3_0	.FILL #-99	
-NNAVE3_1	.FILL #-114
-CSH_ROJO	.FILL x7C00
 
-;; Animar Laser
+
+;; Cuando se dispara se ejecuta esta funcion para animar el laser por la pantalla, dibujandolo cada cierto espacio y borrando el anterior
 ANIMAR_LASER	ST	R0, AL_R0
 		ST	R1, AL_R1
 		ST	R2, AL_R2
@@ -372,6 +385,7 @@ END_ANIMATE	LD	R0, AL_R0
 		LD	R7, AL_R7
 		RET
 
+;;Respaldo de registros
 AL_R0	.BLKW 1
 AL_R1	.BLKW 1
 AL_R2	.BLKW 1
@@ -379,8 +393,8 @@ AL_R3	.BLKW 1
 AL_R4	.BLKW 1
 AL_R5	.BLKW 1
 AL_R7	.BLKW 1
-NLASER_OFFSET	.FILL #-768 
-AL_NEGRO		.FILL x0000
+NLASER_OFFSET	.FILL #-768 ;;Espacio entre dibujo y dibujo de laser
+AL_NEGRO	.FILL x0000
 
 ;; Volver pantalla a negro
 LIMPIAR_PANTALLA	ST	R7, CS_R7
@@ -435,7 +449,7 @@ CTXY_R7		.BLKW 1
 PX_OFFSET	.FILL #16384
 N128		.FILL #-128 
 
-;; TIMED_INPUT
+;; Esta funcion espera un tiempo para tomar el input del jugador
 TIMED_INPUT	ST	R1, TI_R0
 		ST	R2, TI_R2
 		ST	R3, TI_R3
@@ -454,17 +468,21 @@ POLL		LDI	R3, TMR
 		LD	R7, TI_R7
 EXIT_INPUT	RET
 
+;;Respaldo de registros
 TI_R0	.BLKW 1
 TI_R2	.BLKW 1
 TI_R3	.BLKW 1
 TI_R7	.BLKW 1
+;;Direcciones donde se encuentran lo ingresado por teclado por el usuario en FILL xFE02 y demas
 KBSR	.FILL xFE00 
 KBDR	.FILL xFE02 
 TMR	.FILL xFE08	
 TMI	.FILL xFE0A 
 TICKS	.FILL x00C8 
 
-;; Dibujar alien
+;; Esta funcion se encarga de dibujar lo que esta dentro del juego dependiendo de las medidas que le pasemos
+;; Inputs
+;;-Dimensiones de lo que se le indico dibujar, son distintas para la nave, para el laser y para el alien
 DIBUJAR_CUADRADO	ST	R0, DS_R0
 		ST	R5, DS_R5
 		ST	R6, DS_R6
@@ -506,6 +524,8 @@ END_COL	LD	R0, DS_R0
 	LD	R7, DS_R7
 	RET
 
+
+;;Respaldo de registros
 DS_R0		.FILL 1
 DS_R5		.FILL 1
 DS_R6		.FILL 1

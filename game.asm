@@ -207,6 +207,7 @@ SS_R7	.BLKW 1
 
 ;; Este es el loop principal del juego, donde en cada iteracion se corrobora si la letra tocada del teclado es la necesaria para moverse por la pantalla o para disparar
 ;; No toma inputs
+
 GAME_LOOP	ST	R7, GL_R7
 GAME		JSR	TIMED_INPUT 
    
@@ -332,6 +333,7 @@ NOSHOOT	LD	R0, S_R0
 	LD	R7, S_R7
 	RET
 
+
 S_R0	.BLKW 1
 S_R1	.BLKW 1
 S_R2	.BLKW 1
@@ -340,8 +342,76 @@ S_R4	.BLKW 1
 S_R7	.BLKW 1
 NLASER_Y	.FILL xFA00 
 
+; Comprueba si el láser ha impactado a una nave y actualiza su color respectivamente
+; ENTRADAS: R3: posición x del láser
+; R4; posición y del láser --> SALIDAS: R5: IMPACTO o NO IMPACTO
+CHECK_DISPARO_NAVE		ST		R0, CSH_R0
+				ST		R1, CSH_R1
+				ST		R2, CSH_R2
+				ST		R3, CSH_R3
+				ST		R4, CSH_R4
+				ST		R6, CSH_R6
+				ST		R7, CSH_R7
+				LD		R6, NALIEN
+				AND		R5, R5 ,#0
+				ADD		R6, R4, R6
+				BRzp		END_CHECK
+				AND		R5, R5 ,#0
+				LEA		R0, ALIEN0
+				LEA		R1, NNAVE0_0    ; cargar la primer variable para chequear  
+				AND		R2, R2 ,#0
+				ADD		R2, R2 ,#4
+CHECK_NAVE		LDR		R6, R1 ,#0	; cargar el valor de min 	
+				ADD		R6, R3, R6	; comprobar si x pos es mayor que min	
+				BRn		NO_HIT
+				LDR		R6, R1 ,#1	; cargar el valor de max	
+				ADD		R6, R3, R6	; comprobar si x pos en menos que max 	
+				BRp		NO_HIT
+				LD		R6, CSH_ROJO   
+				STR		R6, R0 ,#0	; guardar color rojo en la nave
+				ADD		R1, R1 ,#1	; poner valor de disparo en la nave	
+				ADD		R5, R5 ,#1	; setear el valor de retorno en true	
+				BRnzp	  	UPDATE_ALIENS
+NO_HIT			ADD		R0, R0 ,#2	; incrementar el puntero de memoria de la nave 
+				ADD		R1, R1 ,#2	; incrementar valor de puntero	
+				ADD		R2, R2 ,#-1	; decrementar contador	
+				BRp		CHECK_NAVE
+				BRnzp		END_CHECK
+				
+UPDATE_ALIENS			JSR		DIBUJAR_ALIENS
+
+END_CHECK			LD		R0, CSH_R0
+				LD		R1, CSH_R1
+				LD		R2, CSH_R2
+				LD		R3, CSH_R3
+				LD		R4, CSH_R4
+				LD		R6, CSH_R6
+				LD		R7, CSH_R7
+				RET
+
+CSH_R0			.BLKW 1
+CSH_R1			.BLKW 1
+CSH_R2			.BLKW 1
+CSH_R3			.BLKW 1
+CSH_R4			.BLKW 1
+CSH_R6			.BLKW 1
+CSH_R7			.BLKW 1
+NALIEN			.FILL #-17	; posicion de la nave 
+NNAVE0_0		.FILL #-9 
+NNAVE0_1		.FILL #-24	
+NNAVE1_0		.FILL #-39	
+NNAVE1_1		.FILL #-54	
+NNAVE2_0		.FILL #-69	
+NNAVE2_1		.FILL #-84	
+NNAVE3_0		.FILL #-99	
+NNAVE3_1		.FILL #-114
+CSH_ROJO		.FILL x7C00
+
+
+
 
 ;; Cuando se dispara se ejecuta esta funcion para animar el laser por la pantalla, dibujandolo cada cierto espacio y borrando el anterior
+;; no tiene input
 ANIMAR_LASER	ST	R0, AL_R0
 		ST	R1, AL_R1
 		ST	R2, AL_R2
@@ -357,7 +427,8 @@ ANIMAR_LASER	ST	R0, AL_R0
 		ADD	R2, R1, R2			
 		JSR	CONVERTIR_TO_XY		
 		ADD	R4, R4 ,#0
-		BRnz	CLEAR_LASER			
+		BRnz	CLEAR_LASER
+		JSR	CHECK_DISPARO_NAVE			
 		ADD	R5, R5 ,#0			
 		BRnz	ANIMATE
 

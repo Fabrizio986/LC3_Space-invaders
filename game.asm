@@ -592,7 +592,7 @@ KBSR	.FILL xFE00
 KBDR	.FILL xFE02 
 TMR	.FILL xFE08	
 TMI	.FILL xFE0A 
-TICKS	.FILL x00C8 
+TICKS	.FILL x000A 
 
 ;; Esta funcion se encarga de dibujar lo que esta dentro del juego dependiendo de las medidas que le pasemos
 ;; Inputs

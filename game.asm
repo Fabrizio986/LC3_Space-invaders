@@ -119,7 +119,8 @@ DIBUJAR_ALIENS	ST	R0, DA_R0	;; Respaldo de registros
 		AND	R0, R0 ,#0 	;; Limpiar R0	
 		ADD	R0, R0 ,#4 	;; Setear R0 para ser contador	
 		LEA	R5, ALIEN0	;; Leer posicion del primer alien	
-DIBUJAR_ALIEN	LDR	R4, R5 ,#0 	;; Cargar color en R4	
+
+DIBUJAR_ALIEN	LDR	R4, R5 ,#0	;; Cargar color en R4	
 		ADD 	R5, R5 ,#1	;; Incrementar puntero	
 		LDR 	R1, R5 ,#0 	;; Cargar direccion de inicio de alien en R1
 		LD	R2, ALIEN_DIM 	;; Cargar ancho de alien	
@@ -147,6 +148,40 @@ DA_R5		.BLKW 1
 DA_R7		.BLKW 1
 ;;Dimension del alien
 ALIEN_DIM	.FILL #14
+
+;;Borra los aliens con los colores y la posicion en sus direcciones de memoria
+;;Input: Esta funcion como tal toma los datos inicializados antes de los aliens
+;;Output: Los aliens dibujadas
+BORRAR_ALIENS	ST	R0, DA_R0	;; Respaldo de registros
+		ST	R1, DA_R1
+		ST	R2, DA_R2
+		ST	R3, DA_R3
+		ST	R4, DA_R4
+		ST	R5, DA_R5
+		ST	R7, DA_R7
+		AND	R0, R0 ,#0 	;; Limpiar R0	
+		ADD	R0, R0 ,#4 	;; Setear R0 para ser contador	
+		LEA	R5, ALIEN0	;; Leer posicion del primer alien	
+
+BORRAR_ALIEN	LD	R4, NEGRO	;; Cargar color en R4	
+		ADD 	R5, R5 ,#1	;; Incrementar puntero	
+		LDR 	R1, R5 ,#0 	;; Cargar direccion de inicio de alien en R1
+		LD	R2, ALIEN_DIM 	;; Cargar ancho de alien	
+		LD	R3, ALIEN_DIM 	;; Cargar alto de alien	
+		JSR	DIBUJAR_CUADRADO ;; Dibujar primer alien	
+		ADD	R5, R5 ,#1	;; Incrementar puntero	
+		ADD	R0, R0 ,#-1	;; Decrementar contador	
+		BRp	BORRAR_ALIEN
+		LD	R0, DA_R0
+		LD	R1, DA_R1
+		LD	R2, DA_R2
+		LD	R3, DA_R3
+		LD	R4, DA_R4
+		LD	R5, DA_R5
+		LD	R7, DA_R7
+		RET
+
+
 
 ;;Dibuja/Actualiza el laser basado en inputs
 ;;Input: 
@@ -211,51 +246,97 @@ SS_R7	.BLKW 1
 ;; Este es el loop principal del juego, donde en cada iteracion se corrobora si la letra tocada del teclado es la necesaria para moverse por la pantalla o para disparar
 ;; No toma inputs
 
-GAME_LOOP	ST	R7, GL_R7
-GAME		JSR	TIMED_INPUT 
-   
-SKIP_WHITE	LD	R1, N97        
-		ADD	R1, R0, R1    
-		BRnp	SKIP_LEFT     
-		AND	R0, R0 ,#0
-		ADD	R1, R1 ,#-4
-		JSR	MOVER_NAVE ;; mover izquierda
-		
-SKIP_LEFT	LD	R1, N100       
-		ADD	R1, R0, R1    
-		BRnp	SKIP_RIGHT    
-		AND	R0, R0 ,#0
-		ADD	R1, R1 ,#4	
-		JSR	MOVER_NAVE ;; mover derecha
-				
-SKIP_RIGHT	LD	R1, N32        
-		ADD	R1, R0, R1    
-		BRnp	SKIP_QUIT
-		JSR	SHOOT	;; disparar laser	
-			
-SKIP_QUIT	JSR ANIMAR_LASER
-			JSR GAMEOVER_CHECK
-			BRnzp	GAME
-QUIT		LD		R7, GL_R7
-			RET
+GAME_LOOP      ST      R7, GL_R7                ; Guardar el valor de R7
+GAME
 
-;;Guardado las teclas para moverse y disparar, ademas de los colores para la pantalla			
-N97	.FILL #-97	; a
-N100	.FILL #-100	; d
-N32	.FILL #-32	; espacio
-GL_R7	.BLKW 1
-ROJO	.FILL x7C00
-GREEN	.FILL x03E0
-AZUL	.FILL x001F
-NEGRO	.FILL x0000
+			  ; Llamar a borrar aliens
+			  JSR	BORRAR_ALIENS
+
+			  ; Llamar a la funcion que modifica las posiciones de los aliens
+			  JSR	MOVER_ALIENS
+
+              ; Llamar a la función para redibujar los aliens con las nuevas posiciones
+              JSR     DIBUJAR_ALIENS
+
+			  JSR TIMED_INPUT
+
+SKIP_WHITE 	  LD      R1, N97                ; Cargar la tecla 'a'
+              ADD     R1, R0, R1
+              BRnp    SKIP_LEFT
+              AND     R0, R0, #0
+              ADD     R1, R1, #-4
+              JSR     MOVER_NAVE             ;; mover izquierda
+
+SKIP_LEFT      LD      R1, N100               ; Cargar la tecla 'd'
+              ADD     R1, R0, R1
+              BRnp    SKIP_RIGHT
+              AND     R0, R0, #0
+              ADD     R1, R1, #4
+              JSR     MOVER_NAVE             ;; mover derecha
+
+SKIP_RIGHT     LD      R1, N32                ; Cargar la tecla espacio
+              ADD     R1, R0, R1
+              BRnp    SKIP_QUIT
+              JSR     SHOOT                  ;; disparar laser
+
+SKIP_QUIT     JSR     ANIMAR_LASER
+              JSR     GAMEOVER_CHECK
+              BRnzp   GAME
+			  
+QUIT           LD      R7, GL_R7
+              RET
+
+
+; Guardado las teclas para moverse y disparar, además de los colores para la pantalla
+N97            .FILL   #-97       ; a
+N100           .FILL   #-100      ; d
+N32            .FILL   #-32       ; espacio
+GL_R7          .BLKW   1
+ROJO           .FILL   x7C00
+GREEN          .FILL   x03E0
+AZUL           .FILL   x001F
+NEGRO          .FILL   x0000
+VAL256		   .FILL   #256
 
 ; Objetos del juego
-ALIEN0	.BLKW 2	
-ALIEN1	.BLKW 2
-ALIEN2	.BLKW 2
-ALIEN3	.BLKW 2
-NAVE	.BLKW 2 
-LASER	.BLKW 2 
+ALIEN0         .BLKW   2    
+ALIEN1         .BLKW   2
+ALIEN2         .BLKW   2
+ALIEN3         .BLKW   2
+NAVE           .BLKW   2 
+LASER          .BLKW   2 
+
+
+;; Mover aliens hacia abajo
+MOVER_ALIENS	LEA     R0, ALIEN0
+			  LDR     R1, R0, #1           ; Cargar la posición de Y de ALIEN0
+
+			  ST 	  R2, SSS_R2
+			  LD	  R2, VAL256				 ;cargar numero en R2
+              ADD     R1, R1, R2            ; Sumar 1 a la posición Y (mover el alien hacia abajo)
+              STR     R1, R0, #1             ; Guardar la nueva posición en ALIEN0
+
+              LEA     R0, ALIEN1
+              LDR     R1, R0, #1             ; Cargar la posición de Y de ALIEN1
+              ADD     R1, R1, R2             ; Sumar 1 a la posición Y (mover el alien hacia abajo)
+              STR     R1, R0, #1             ; Guardar la nueva posición en ALIEN1
+
+              LEA     R0, ALIEN2
+              LDR     R1, R0, #1             ; Cargar la posición de Y de ALIEN2
+              ADD     R1, R1, R2             ; Sumar 1 a la posición Y (mover el alien hacia abajo)
+              STR     R1, R0, #1             ; Guardar la nueva posición en ALIEN2
+
+              LEA     R0, ALIEN3
+              LDR     R1, R0, #1             ; Cargar la posición de Y de ALIEN3
+              ADD     R1, R1, R2             ; Sumar 1 a la posición Y (mover el alien hacia abajo)
+              STR     R1, R0, #1             ; Guardar la nueva posición en ALIEN3
+			  
+			  LD	  R2, SSS_R2		     ;recuperar  en R2
+
+			  RET
+
+SSS_R2	.BLKW 1
+
 
 
 ;; GAMEOVER
@@ -293,6 +374,9 @@ G_R4			.BLKW 1
 G_R7			.BLKW 1
 COLOR_CHECK		.FILL #-31744
 GAMEOVER_STR	.STRINGZ "GAMEOVER"
+
+
+
 
 
 

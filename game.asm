@@ -245,36 +245,43 @@ SS_R7	.BLKW 1
 
 ;; Este es el loop principal del juego, donde en cada iteracion se corrobora si la letra tocada del teclado es la necesaria para moverse por la pantalla o para disparar
 ;; No toma inputs
-
 GAME_LOOP      ST      R7, GL_R7                ; Guardar el valor de R7
 GAME
+              LD      R1, FRAME_COUNTER       ; Cargar el valor actual del contador de ciclos
+              ADD     R1, R1, #1             ; Incrementar el contador
+              ST      R1, FRAME_COUNTER     ; Guardar el nuevo valor del contador
 
-			  ; Llamar a borrar aliens
-			  JSR	BORRAR_ALIENS
+              LD      R1, FRAME_COUNTER     ; Cargar el contador de ciclos
+              AND     R2, R1, #7            ; Comprobar si hemos llegado a x ciclos
+              BRp    SKIP_ALIEN_MOVE
 
-			  ; Llamar a la funcion que modifica las posiciones de los aliens
-			  JSR	MOVER_ALIENS
+              ; Si es múltiplo de 8, mover los alien
+			  JSR	  BORRAR_ALIENS
+              JSR     MOVER_ALIENS          ; Mover los aliens
+			  JSR     DIBUJAR_ALIENS          ; Mover los aliens
 
-              ; Llamar a la función para redibujar los aliens con las nuevas posiciones
-              JSR     DIBUJAR_ALIENS
+              ; Reiniciar el contador de ciclos
+              AND     R1, R1, #0            ; Restablecer el contador de ciclos a 0
+              ST      R1, FRAME_COUNTER     ; Guardar el valor actualizado
 
-			  JSR TIMED_INPUT
 
-SKIP_WHITE 	  LD      R1, N97                ; Cargar la tecla 'a'
+SKIP_ALIEN_MOVE 
+JSR		TIMED_INPUT
+SKIP_WHITE    LD      R1, N97                ; Cargar la tecla 'a'
               ADD     R1, R0, R1
               BRnp    SKIP_LEFT
               AND     R0, R0, #0
               ADD     R1, R1, #-4
               JSR     MOVER_NAVE             ;; mover izquierda
 
-SKIP_LEFT      LD      R1, N100               ; Cargar la tecla 'd'
+SKIP_LEFT     LD      R1, N100               ; Cargar la tecla 'd'
               ADD     R1, R0, R1
               BRnp    SKIP_RIGHT
               AND     R0, R0, #0
               ADD     R1, R1, #4
               JSR     MOVER_NAVE             ;; mover derecha
 
-SKIP_RIGHT     LD      R1, N32                ; Cargar la tecla espacio
+SKIP_RIGHT    LD      R1, N32                ; Cargar la tecla espacio
               ADD     R1, R0, R1
               BRnp    SKIP_QUIT
               JSR     SHOOT                  ;; disparar laser
@@ -282,8 +289,8 @@ SKIP_RIGHT     LD      R1, N32                ; Cargar la tecla espacio
 SKIP_QUIT     JSR     ANIMAR_LASER
               JSR     GAMEOVER_CHECK
               BRnzp   GAME
-			  
-QUIT           LD      R7, GL_R7
+              
+QUIT          LD      R7, GL_R7
               RET
 
 
@@ -297,6 +304,9 @@ GREEN          .FILL   x03E0
 AZUL           .FILL   x001F
 NEGRO          .FILL   x0000
 VAL256		   .FILL   #256
+VALDELAY	   .FILL   #10000
+FRAME_COUNTER  .FILL   #0        ; Inicializa el contador de ciclos en 0
+
 
 ; Objetos del juego
 ALIEN0         .BLKW   2    
@@ -305,7 +315,6 @@ ALIEN2         .BLKW   2
 ALIEN3         .BLKW   2
 NAVE           .BLKW   2 
 LASER          .BLKW   2 
-
 
 ;; Mover aliens hacia abajo
 MOVER_ALIENS	LEA     R0, ALIEN0

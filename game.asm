@@ -13,6 +13,7 @@ MAIN	JSR	LIMPIAR_PANTALLA
 	
 QUIT_STR	.STRINGZ "Quit\n"
 
+
 ;;SETUP DATA se encarga de inicializar algunos datos de los objetos del juego para el comienzo y al final se restauran los valores de los registros
 ;; Esta funcion no tiene inputs definidos, sino que se tiene los registros iniciales
 ;; Tiene como salida:
@@ -247,6 +248,11 @@ SS_R7	.BLKW 1
 ;; No toma inputs
 GAME_LOOP      ST      R7, GL_R7                ; Guardar el valor de R7
 GAME
+
+			  ;LD      R1, ALIEN_COUNTER   
+              ;ADD     R1, R1, #1             ; Incrementar el contador
+              ;ST      R1, ALIEN_COUNTER     
+
               LD      R1, FRAME_COUNTER       ; Cargar el valor actual del contador de ciclos
               ADD     R1, R1, #1             ; Incrementar el contador
               ST      R1, FRAME_COUNTER     ; Guardar el nuevo valor del contador
@@ -306,6 +312,7 @@ NEGRO          .FILL   x0000
 VAL256		   .FILL   #256
 VALDELAY	   .FILL   #10000
 FRAME_COUNTER  .FILL   #0        ; Inicializa el contador de ciclos en 0
+ALIEN_COUNTER  .FILL   #350        ; Inicializa el contador de ciclos en 0
 
 
 ; Objetos del juego
@@ -358,16 +365,29 @@ GAMEOVER_CHECK	ST		R0, G_R0
 				LD		R2, COLOR_CHECK
 				AND		R4, R4 ,#0
 				ADD		R4, R4 ,#4
+
+                ;; Cargar el valor de ALIEN_COUNTER
+                LD      R5, ALIEN_COUNTER
+                ;; Restar 100 de ALIEN_COUNTER (equivalente a SUB en LC-3)
+                ADD     R5, R5, #-1      ;; R5 = ALIEN_COUNTER - 100 (usamos -100 para restar)
+				ST		R5, ALIEN_COUNTER
+                BRn     GAMEOVER
+
 				LEA		R0, ALIEN0
+
+
 CHECK_ALIEN		LDR		R1, R0 ,#0
 				ADD		R3, R1, R2
 				BRnp	CONTINUE
 				ADD		R0, R0 ,#2
 				ADD		R4, R4 ,#-1
 				BRp		CHECK_ALIEN
-				LEA		R0, GAMEOVER_STR
+
+				
+				LEA		R0, WIN_STR
 				PUTS
 				HALT
+
 CONTINUE		LD		R0, G_R0
 				LD		R1, G_R1
 				LD		R2, G_R2
@@ -375,6 +395,13 @@ CONTINUE		LD		R0, G_R0
 				LD		R4, G_R4
 				LD		R7, G_R7
 				RET
+
+
+GAMEOVER		LEA		R0, GAMEOVER_STR
+				PUTS
+				HALT
+
+
 G_R0			.BLKW 1
 G_R1			.BLKW 1
 G_R2			.BLKW 1
@@ -383,7 +410,7 @@ G_R4			.BLKW 1
 G_R7			.BLKW 1
 COLOR_CHECK		.FILL #-31744
 GAMEOVER_STR	.STRINGZ "GAMEOVER"
-
+WIN_STR	.STRINGZ "WIN"
 
 
 
